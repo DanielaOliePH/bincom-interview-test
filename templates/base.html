@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h4 class="mb-3">Question 1: Individual Polling Unit Results (Delta State)</h4>
+    <form method="POST" class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">1. Select LGA</label>
+            <select id="lgaSelect" class="form-select" required>
+                <option value="">-- Choose LGA --</option>
+                {% for lga in lgas %}
+                <option value="{{ lga.lga_id }}">{{ lga.lga_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">2. Select Ward</label>
+            <select id="wardSelect" class="form-select" disabled required>
+                <option value="">-- Choose LGA First --</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">3. Select Polling Unit</label>
+            <select name="polling_unit_id" id="puSelect" class="form-select" disabled required>
+                <option value="">-- Choose Ward First --</option>
+            </select>
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-success">View Results</button>
+        </div>
+    </form>
+
+    {% if selected_pu %}
+    <hr class="my-4">
+    <h5>Results for: {{ selected_pu.polling_unit_name }} ({{ selected_pu.polling_unit_number }})</h5>
+    {% if results %}
+    <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+            <tr><th>Party</th><th>Score</th></tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr><td>{{ row.party_abbreviation }}</td><td>{{ row.party_score }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-warning mt-3">No announced results found for this polling unit.</div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<script>
+document.getElementById("lgaSelect").addEventListener("change", function() {
+    const lgaId = this.value;
+    const wardSelect = document.getElementById("wardSelect");
+    const puSelect = document.getElementById("puSelect");
+    wardSelect.innerHTML = '<option value="">Loading...</option>';
+    puSelect.innerHTML = '<option value="">-- Choose Ward First --</option>';
+    puSelect.disabled = true;
+
+    if (!lgaId) return;
+    fetch(`/api/wards/${lgaId}`)
+        .then(res => res.json())
+        .then(data => {
+            wardSelect.innerHTML = '<option value="">-- Choose Ward --</option>';
+            data.forEach(w => wardSelect.innerHTML += `<option value="${w.ward_id}">${w.ward_name}</option>`);
+            wardSelect.disabled = false;
+        });
+});
+
+document.getElementById("wardSelect").addEventListener("change", function() {
+    const wardId = this.value;
+    const puSelect = document.getElementById("puSelect");
+    puSelect.innerHTML = '<option value="">Loading...</option>';
+    if (!wardId) return;
+
+    fetch(`/api/polling_units/${wardId}`)
+        .then(res => res.json())
+        .then(data => {
+            puSelect.innerHTML = '<option value="">-- Choose Polling Unit --</option>';
+            data.forEach(pu => puSelect.innerHTML += `<option value="${pu.uniqueid}">${pu.polling_unit_name} (${pu.polling_unit_number})</option>`);
+            puSelect.disabled = false;
+        });
+});
+</script>
+{% endblock %}
