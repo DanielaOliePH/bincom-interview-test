@@ -1,1 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h4 class="mb-3">Question 2: Summed Total Results by LGA</h4>
+    <form method="POST" class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Select Local Government Area (Delta State)</label>
+            <select name="lga_id" class="form-select" required>
+                <option value="">-- Choose LGA --</option>
+                {% for lga in lgas %}
+                <option value="{{ lga.lga_id }}">{{ lga.lga_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-success">Calculate Summed Total</button>
+        </div>
+    </form>
 
+    {% if selected_lga %}
+    <hr class="my-4">
+    <h5>Summed Polling Unit Results for: {{ selected_lga.lga_name }}</h5>
+    {% if summed_results %}
+    <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+            <tr><th>Party</th><th>Total Votes (Summed from Polling Units)</th></tr>
+        </thead>
+        <tbody>
+            {% for row in summed_results %}
+            <tr><td>{{ row.party_abbreviation }}</td><td>{{ row.total_score }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-warning mt-3">No polling unit results recorded under this LGA.</div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
